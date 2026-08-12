@@ -249,8 +249,13 @@
       const crop = { x: 300, y: 560, width: 1110, height: 450 };
 
       function artworkLayout(width, height) {
-        const scaleFactor = window.matchMedia("(max-width: 820px)").matches ? 1 : 0.84;
-        const scale = Math.min(width / crop.width, height / crop.height) * scaleFactor;
+        const mobileLayout = window.matchMedia("(max-width: 820px)").matches;
+        /* Reserve 18px on each side for the 10px arrow plus at least 2px of
+           clear space before the Greek letterforms begin. */
+        const mobileArrowClearance = mobileLayout ? 18 : 0;
+        const usableWidth = Math.max(1, width - mobileArrowClearance * 2);
+        const scaleFactor = mobileLayout ? 1 : 0.84;
+        const scale = Math.min(usableWidth / crop.width, height / crop.height) * scaleFactor;
         const displayWidth = crop.width * scale;
         const displayHeight = crop.height * scale;
         return {
