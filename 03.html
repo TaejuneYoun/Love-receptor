@@ -26,6 +26,7 @@
   <script src="entry-transition.js"></script>
   <link rel="stylesheet" href="cursor.css">
   <script src="cursor.js" defer></script>
+  <script src="mobile-navigation.js" defer></script>
   <title>Love receptor — 03</title>
   <style>
     :root { --ink: #000000; --paper: #f1f0eb; }
@@ -597,7 +598,7 @@
           && interlineGap < largestInterlineGap * 0.98;
         const baseHighlightRate = 0.165;
         let maximumRate = baseHighlightRate;
-        if (state.kind === "fold") maximumRate *= 0.84;
+        if (state.kind === "fold") maximumRate *= mobileInteraction ? 0.84 : 1.68;
         if (shortFold) maximumRate *= 0.7;
         if (mobileInteraction) maximumRate *= state.kind === "fold" ? 4 : 3;
         const maximumAdvance = Math.max(0.00035, maximumRate * elapsed);
