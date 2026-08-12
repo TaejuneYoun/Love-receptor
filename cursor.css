@@ -116,10 +116,10 @@ body.main-page .custom-cursor-label {
   min-width: 20px;
   color: #000000;
   font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-  font-size: 8px;
-  font-weight: 500;
-  line-height: 1;
-  letter-spacing: .06em;
+  font-size: var(--cursor-label-size, 8px);
+  font-weight: var(--cursor-label-weight, 500);
+  line-height: var(--cursor-label-line-height, 1);
+  letter-spacing: var(--cursor-label-letter-spacing, .06em);
   text-align: center;
   opacity: 0;
   transform: translate(-50%, -50%);
@@ -158,7 +158,7 @@ body.main-page .custom-cursor-label {
 
   .custom-cursor-label {
     min-width: 40px;
-    font-size: 16px;
+    font-size: var(--cursor-label-size, 16px);
   }
 }
 
