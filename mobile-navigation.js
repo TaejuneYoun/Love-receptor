@@ -41,17 +41,6 @@
   );
   document.body.appendChild(navigation);
 
-  const copyright = document.createElement("footer");
-  copyright.className = "mobile-detail-footer";
-  copyright.append("© 2026 ");
-  const author = document.createElement("a");
-  author.href = "https://www.instagram.com/taejun____e/";
-  author.target = "_blank";
-  author.rel = "noopener noreferrer";
-  author.textContent = "Taejune Youn";
-  copyright.append(author, ". All rights reserved.");
-  document.body.appendChild(copyright);
-
   const inscription = document.querySelector(".inscription");
   const directionLayer = inscription?.querySelector(".direction-markers");
   const positionDirectionArrows = () => {
