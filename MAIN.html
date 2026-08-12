@@ -62,7 +62,9 @@
 
     .cloud {
       position: absolute;
-      inset: 0;
+      /* Keep the visual cloud above the footer/navigation and optically
+         centred on both wide and short desktop viewports. */
+      inset: -7vh 0 7vh;
       z-index: 2;
       pointer-events: none;
       transform: rotateX(var(--scene-rx, 0deg)) rotateY(var(--scene-ry, 0deg));
@@ -89,7 +91,7 @@
     .molecule-layer {
       position: absolute;
       left: 50%;
-      top: 49%;
+      top: 42%;
       z-index: 1;
       width: min(64vw, 980px);
       height: min(78vh, 820px);
@@ -342,7 +344,8 @@
       }
       .cloud {
         position: absolute;
-        inset: 0;
+        inset: -5vh 0 5vh;
+        inset: -5svh 0 5svh;
         display: block;
         min-height: 100svh;
         padding: 0;
