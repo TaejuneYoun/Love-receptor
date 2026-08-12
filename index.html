@@ -1,0 +1,565 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Love receptor is an interactive reading experience exploring how love is written, translated, and revealed across twelve languages and literary traditions.">
+  <meta name="theme-color" content="#000000">
+  <meta name="robots" content="index, follow">
+  <link rel="icon" type="image/png" sizes="64x64" href="favicon.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
+  <link rel="canonical" href="https://taejuneyoun.github.io/Love-receptor/">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://taejuneyoun.github.io/Love-receptor/">
+  <meta property="og:site_name" content="Love receptor">
+  <meta property="og:title" content="Love receptor">
+  <meta property="og:description" content="Love receptor is an interactive reading experience exploring how love is written, translated, and revealed across twelve languages and literary traditions.">
+  <meta property="og:image" content="https://taejuneyoun.github.io/Love-receptor/og-preview.png">
+  <meta property="og:image:type" content="image/png">
+  <meta property="og:image:width" content="2816">
+  <meta property="og:image:height" content="2136">
+  <meta property="og:image:alt" content="Love receptor interactive works floating in three-dimensional space">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Love receptor">
+  <meta name="twitter:description" content="Love receptor is an interactive reading experience exploring how love is written, translated, and revealed across twelve languages and literary traditions.">
+  <meta name="twitter:image" content="https://taejuneyoun.github.io/Love-receptor/og-preview.png">
+  <link rel="stylesheet" href="cursor.css">
+  <script src="cursor.js" defer></script>
+  <script src="gyro.js" defer></script>
+  <script src="main-transition.js" defer></script>
+  <title>Love receptor</title>
+  <style>
+    :root {
+      --background: #d3d3d3;
+      --ink: #000000;
+    }
+
+    * { box-sizing: border-box; }
+
+    html,
+    body {
+      min-height: 100%;
+      margin: 0;
+      background: var(--background);
+    }
+
+    body {
+      overflow: hidden;
+      color: var(--ink);
+      font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+      font-weight: 300;
+    }
+
+    .scene {
+      position: fixed;
+      inset: 0;
+      overflow: hidden;
+      perspective: 1450px;
+      perspective-origin: 50% 48%;
+      isolation: isolate;
+    }
+
+    .cloud {
+      position: absolute;
+      inset: 0;
+      z-index: 2;
+      pointer-events: none;
+      transform: rotateX(var(--scene-rx, 0deg)) rotateY(var(--scene-ry, 0deg));
+      transform-style: preserve-3d;
+      transition: transform 80ms linear;
+      will-change: transform;
+    }
+
+    .tile {
+      position: absolute;
+      left: var(--x);
+      top: var(--y);
+      z-index: var(--layer);
+      display: block;
+      width: var(--w);
+      color: inherit;
+      text-decoration: none;
+      transform-style: preserve-3d;
+      animation: drift var(--duration) ease-in-out var(--delay) infinite alternate;
+      will-change: transform;
+      pointer-events: auto;
+    }
+
+    .molecule-layer {
+      position: absolute;
+      left: 50%;
+      top: 49%;
+      z-index: 1;
+      width: min(64vw, 980px);
+      height: min(78vh, 820px);
+      transform: translate(-50%, -50%) translateZ(-260px);
+      transform-style: preserve-3d;
+    }
+
+    .molecule-layer canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      outline: none;
+      opacity: .78;
+      transition: opacity 220ms ease, filter 220ms ease;
+    }
+
+    .molecule-layer.hovered canvas {
+      opacity: .96;
+      filter: contrast(1.12);
+    }
+
+    .model-tooltip {
+      position: fixed;
+      left: 0;
+      top: 0;
+      z-index: 300;
+      max-width: min(310px, calc(100vw - 32px));
+      padding: 7px 9px 8px;
+      background: #000000;
+      color: #ffffff;
+      font-size: 10px;
+      font-weight: 400;
+      line-height: 1.35;
+      letter-spacing: .01em;
+      pointer-events: none;
+      opacity: 0;
+      transform: translate(14px, 14px);
+      transition: opacity 120ms ease;
+    }
+
+    .model-tooltip.visible { opacity: 1; }
+
+    .tile:hover,
+    .tile:focus-visible {
+      z-index: 100;
+      outline: none;
+    }
+
+    .card {
+      display: block;
+      transform: translateZ(0) rotateX(var(--card-rx, 0deg)) rotateY(var(--card-ry, 0deg));
+      transform-style: preserve-3d;
+      transition: transform 260ms cubic-bezier(.22, 1, .36, 1);
+      will-change: transform;
+    }
+
+    .tile:hover .card,
+    .tile:focus-visible .card {
+      transform: translateZ(72px) rotateX(var(--card-rx, 0deg)) rotateY(var(--card-ry, 0deg)) scale(1.045);
+    }
+
+    .tile:focus-visible .card::after {
+      content: "";
+      position: absolute;
+      inset: -7px;
+      border: 1px solid #000000;
+      pointer-events: none;
+    }
+
+    .tile img {
+      display: block;
+      width: 100%;
+      height: auto;
+      border: 0;
+      filter: contrast(1.15);
+      box-shadow: 0 4px 130px #ffffff;
+      user-select: none;
+      -webkit-user-drag: none;
+    }
+
+    .pages {
+      position: fixed;
+      left: 50%;
+      bottom: 22px;
+      z-index: 200;
+      display: flex;
+      gap: 7px;
+      font-size: 9px;
+      white-space: nowrap;
+      transform: translateX(-50%);
+    }
+
+    .pages a {
+      color: var(--ink);
+      text-decoration: none;
+      opacity: .3;
+      transition: opacity 160ms ease;
+    }
+
+    .pages a + a::before {
+      content: "/";
+      margin-right: 7px;
+      opacity: .55;
+    }
+
+    .pages a.active,
+    .pages a:hover,
+    .pages a:focus-visible {
+      opacity: 1;
+      outline: none;
+    }
+
+    .site-footer {
+      position: fixed;
+      left: 20px;
+      bottom: 18px;
+      z-index: 200;
+      font-size: 9px;
+      line-height: 1.4;
+      letter-spacing: .01em;
+      white-space: nowrap;
+    }
+
+    .site-footer a {
+      color: inherit;
+      text-decoration: none;
+      border-bottom: 1px solid transparent;
+      transition: border-color 160ms ease;
+    }
+
+    .site-footer a:hover,
+    .site-footer a:focus-visible {
+      border-color: currentColor;
+      outline: none;
+    }
+
+    body.is-transitioning .custom-cursor,
+    body.is-transitioning .model-tooltip {
+      opacity: 0 !important;
+    }
+
+    body.is-transitioning .tile {
+      animation-play-state: paused;
+    }
+
+    .main-transition {
+      position: fixed;
+      inset: 0;
+      z-index: 20000;
+      overflow: hidden;
+      pointer-events: auto;
+    }
+
+    .main-transition-box {
+      position: absolute;
+      left: var(--transition-left);
+      top: var(--transition-top);
+      width: var(--transition-width);
+      height: var(--transition-height);
+      overflow: hidden;
+      background: #000000;
+      animation: main-box-expand 680ms cubic-bezier(.76, 0, .24, 1) both;
+      will-change: left, top, width, height;
+    }
+
+    .main-transition-art {
+      display: block;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      filter: contrast(1.15);
+      transform-origin: 50% 50%;
+      animation: main-art-collapse 900ms cubic-bezier(.65, 0, .35, 1) both;
+      will-change: transform, opacity;
+    }
+
+    .main-transition-dot {
+      position: fixed;
+      left: 50%;
+      top: 50%;
+      z-index: 2;
+      width: 34px;
+      height: 34px;
+      margin: -17px 0 0 -17px;
+      border-radius: 999px;
+      background: #f1f0eb;
+      box-shadow: 0 0 1px rgba(255, 255, 255, .5);
+      animation: main-dot-disappear 770ms cubic-bezier(.22, 1, .36, 1) 550ms both;
+      will-change: transform, opacity;
+    }
+
+    @keyframes main-box-expand {
+      to {
+        left: 0;
+        top: 0;
+        width: 100vw;
+        height: 100vh;
+      }
+    }
+
+    @keyframes main-art-collapse {
+      0%, 20% {
+        opacity: 1;
+        transform: scale(1);
+      }
+      72% {
+        opacity: .92;
+        transform: scale(.075);
+      }
+      100% {
+        opacity: 0;
+        transform: scale(.008);
+      }
+    }
+
+    @keyframes main-dot-disappear {
+      0% {
+        opacity: 0;
+        transform: scale(.2);
+      }
+      18%, 56% {
+        opacity: 1;
+        transform: scale(1);
+      }
+      100% {
+        opacity: 0;
+        transform: scale(.08);
+      }
+    }
+
+    @keyframes drift {
+      from {
+        transform:
+          translate3d(-50%, calc(-50% - var(--float)), var(--z))
+          rotateX(var(--rx-a)) rotateY(var(--ry-a)) rotateZ(var(--rz-a));
+      }
+      to {
+        transform:
+          translate3d(calc(-50% + var(--sway)), calc(-50% + var(--float)), var(--z-end))
+          rotateX(var(--rx-b)) rotateY(var(--ry-b)) rotateZ(var(--rz-b));
+      }
+    }
+
+    @media (max-width: 820px) {
+      body { overflow: hidden; }
+      .scene {
+        position: fixed;
+        min-height: 100svh;
+        overflow: hidden;
+        perspective: none;
+      }
+      .cloud {
+        position: absolute;
+        inset: 0;
+        display: block;
+        min-height: 100svh;
+        padding: 0;
+        transform: perspective(1200px)
+          rotateX(var(--gyro-rx, 0deg))
+          rotateY(var(--gyro-ry, 0deg)) !important;
+        transform-origin: 50% 50%;
+        transition: transform 110ms linear;
+        will-change: transform;
+      }
+      .molecule-layer {
+        position: fixed;
+        top: 50%;
+        width: 112vw;
+        height: 72svh;
+        opacity: .44;
+        transform: translate(-50%, -50%) perspective(1200px)
+          rotateX(var(--gyro-rx, 0deg))
+          rotateY(var(--gyro-ry, 0deg));
+        transition: transform 110ms linear;
+      }
+      .tile {
+        position: absolute;
+        animation-name: mobile-drift;
+        animation-duration: var(--duration);
+      }
+      .tile:nth-child(1) { left: 66%; top: 28%; width: 72vw; z-index: 8; }
+      .tile:nth-child(2) { left: 51%; top: 43%; width: 60vw; z-index: 12; }
+      .tile:nth-child(3) { left: 88%; top: 40%; width: 72vw; z-index: 7; }
+      .tile:nth-child(4) { left: -9%; top: 63%; width: 62vw; z-index: 5; }
+      .tile:nth-child(5) { left: 56%; top: 53%; width: 67vw; z-index: 14; }
+      .tile:nth-child(6) { left: 22%; top: 59%; width: 68vw; z-index: 8; }
+      .tile:nth-child(7) { left: 27%; top: 33%; width: 42vw; z-index: 6; }
+      .tile:nth-child(8) { left: 60%; top: 64%; width: 67vw; z-index: 10; }
+      .tile:nth-child(9) { left: 28%; top: 74%; width: 45vw; z-index: 7; }
+      .tile:nth-child(10) { left: 79%; top: 72%; width: 72vw; z-index: 6; }
+      .tile:nth-child(11) { left: 3%; top: 43%; width: 46vw; z-index: 4; }
+      .tile:nth-child(12) { left: 55%; top: 81%; width: 94vw; z-index: 3; }
+      .tile:hover .card,
+      .tile:focus-visible .card {
+        transform: scale(1.035);
+      }
+      .tile img { box-shadow: 0 4px 130px #ffffff; }
+      .pages { display: none; }
+      .site-footer {
+        left: 50%;
+        bottom: 16px;
+        width: calc(100% - 32px);
+        font-size: 8px;
+        text-align: center;
+        transform: translateX(-50%);
+      }
+    }
+
+    @keyframes mobile-drift {
+      from { transform: translate(-50%, calc(-50% - 5px)) rotate(-.7deg); }
+      to { transform: translate(calc(-50% + 5px), calc(-50% + 5px)) rotate(.7deg); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .cloud { transition: none; }
+      .tile { animation: none; }
+      .card { transition: none; }
+      .main-transition-box {
+        inset: 0;
+        width: 100vw;
+        height: 100vh;
+        animation: none;
+      }
+      .main-transition-art,
+      .main-transition-dot {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body class="highlight-complete main-page">
+  <main class="scene" aria-label="Barbarian Love main page">
+    <div class="molecule-layer" aria-label="3D model of the human oxytocin receptor">
+      <canvas class="molecule-canvas" aria-label="6TPK, Crystal structure of the human oxytocin receptor"></canvas>
+    </div>
+    <div class="model-tooltip" role="tooltip">6TPK, Crystal structure of the human oxytocin receptor</div>
+
+    <div class="cloud">
+      <a class="tile" href="01.html" aria-label="Open page 01"
+        style="--x:63%;--y:14%;--w:clamp(230px,18vw,350px);--layer:8;--z:90px;--z-end:145px;--float:12px;--sway:9px;--duration:7.9s;--delay:-2.2s;--rx-a:-4deg;--ry-a:5deg;--rz-a:1deg;--rx-b:3deg;--ry-b:-4deg;--rz-b:-1deg;">
+        <span class="card"><img src="main-01.png" alt="Page 01 preview" draggable="false"></span>
+      </a>
+
+      <a class="tile" href="02.html" aria-label="Open page 02"
+        style="--x:53%;--y:37%;--w:clamp(190px,15.5vw,300px);--layer:12;--z:185px;--z-end:235px;--float:15px;--sway:-8px;--duration:8.8s;--delay:-5.1s;--rx-a:4deg;--ry-a:-6deg;--rz-a:-1deg;--rx-b:-3deg;--ry-b:5deg;--rz-b:1deg;">
+        <span class="card"><img src="main-02.png" alt="Page 02 preview" draggable="false"></span>
+      </a>
+
+      <a class="tile" href="03.html" aria-label="Open page 03"
+        style="--x:73%;--y:32%;--w:clamp(225px,18vw,345px);--layer:7;--z:35px;--z-end:85px;--float:10px;--sway:12px;--duration:9.2s;--delay:-3.7s;--rx-a:-3deg;--ry-a:-5deg;--rz-a:0deg;--rx-b:3deg;--ry-b:4deg;--rz-b:1deg;">
+        <span class="card"><img src="main-03.png" alt="Page 03 preview" draggable="false"></span>
+      </a>
+
+      <a class="tile" href="04.html" aria-label="Open page 04"
+        style="--x:27%;--y:66%;--w:clamp(215px,17vw,325px);--layer:6;--z:10px;--z-end:60px;--float:14px;--sway:-10px;--duration:8.4s;--delay:-4.5s;--rx-a:3deg;--ry-a:6deg;--rz-a:-1deg;--rx-b:-4deg;--ry-b:-5deg;--rz-b:1deg;">
+        <span class="card"><img src="main-04.png" alt="Page 04 preview" draggable="false"></span>
+      </a>
+
+      <a class="tile" href="05.html" aria-label="Open page 05"
+        style="--x:57%;--y:52%;--w:clamp(210px,16.5vw,315px);--layer:14;--z:235px;--z-end:285px;--float:9px;--sway:8px;--duration:7.4s;--delay:-1.6s;--rx-a:-5deg;--ry-a:4deg;--rz-a:1deg;--rx-b:4deg;--ry-b:-3deg;--rz-b:-1deg;">
+        <span class="card"><img src="main-05.png" alt="Page 05 preview" draggable="false"></span>
+      </a>
+
+      <a class="tile" href="06.html" aria-label="Open page 06"
+        style="--x:43%;--y:59%;--w:clamp(215px,17vw,325px);--layer:8;--z:75px;--z-end:125px;--float:13px;--sway:-11px;--duration:9.6s;--delay:-6.2s;--rx-a:3deg;--ry-a:-4deg;--rz-a:0deg;--rx-b:-4deg;--ry-b:5deg;--rz-b:-1deg;">
+        <span class="card"><img src="main-06.png" alt="Page 06 preview" draggable="false"></span>
+      </a>
+
+      <a class="tile" href="07.html" aria-label="Open page 07"
+        style="--x:40%;--y:22%;--w:clamp(145px,10.8vw,208px);--layer:5;--z:-20px;--z-end:30px;--float:16px;--sway:7px;--duration:10.1s;--delay:-7.3s;--rx-a:-5deg;--ry-a:-7deg;--rz-a:-1deg;--rx-b:4deg;--ry-b:6deg;--rz-b:1deg;">
+        <span class="card"><img src="main-07.png" alt="Page 07 preview" draggable="false"></span>
+      </a>
+
+      <a class="tile" href="08.html" aria-label="Open page 08"
+        style="--x:65%;--y:65%;--w:clamp(225px,17.5vw,335px);--layer:10;--z:120px;--z-end:175px;--float:11px;--sway:9px;--duration:8.1s;--delay:-3.3s;--rx-a:4deg;--ry-a:5deg;--rz-a:0deg;--rx-b:-3deg;--ry-b:-6deg;--rz-b:1deg;">
+        <span class="card"><img src="main-08.png" alt="Page 08 preview" draggable="false"></span>
+      </a>
+
+      <a class="tile" href="09.html" aria-label="Open page 09"
+        style="--x:45%;--y:82%;--w:clamp(145px,10.8vw,208px);--layer:7;--z:25px;--z-end:80px;--float:15px;--sway:-7px;--duration:9.7s;--delay:-5.8s;--rx-a:-4deg;--ry-a:7deg;--rz-a:1deg;--rx-b:5deg;--ry-b:-6deg;--rz-b:-1deg;">
+        <span class="card"><img src="main-09.png" alt="Page 09 preview" draggable="false"></span>
+      </a>
+
+      <a class="tile" href="10.html" aria-label="Open page 10"
+        style="--x:73%;--y:80%;--w:clamp(225px,17.5vw,335px);--layer:6;--z:5px;--z-end:55px;--float:13px;--sway:11px;--duration:8.9s;--delay:-4.1s;--rx-a:5deg;--ry-a:-5deg;--rz-a:-1deg;--rx-b:-4deg;--ry-b:4deg;--rz-b:1deg;">
+        <span class="card"><img src="main-10.png" alt="Page 10 preview" draggable="false"></span>
+      </a>
+
+      <a class="tile" href="11.html" aria-label="Open page 11"
+        style="--x:26%;--y:33%;--w:clamp(135px,9.5vw,182px);--layer:4;--z:-65px;--z-end:-10px;--float:17px;--sway:-8px;--duration:10.4s;--delay:-8.4s;--rx-a:6deg;--ry-a:8deg;--rz-a:1deg;--rx-b:-5deg;--ry-b:-7deg;--rz-b:-1deg;">
+        <span class="card"><img src="main-11.png" alt="Page 11 preview" draggable="false"></span>
+      </a>
+
+      <a class="tile" href="12.html" aria-label="Open page 12"
+        style="--x:53%;--y:72%;--w:clamp(330px,29vw,555px);--layer:3;--z:-105px;--z-end:-45px;--float:12px;--sway:12px;--duration:9.4s;--delay:-6.7s;--rx-a:-3deg;--ry-a:4deg;--rz-a:0deg;--rx-b:3deg;--ry-b:-5deg;--rz-b:1deg;">
+        <span class="card"><img src="main-12.png" alt="Page 12 preview" draggable="false"></span>
+      </a>
+    </div>
+
+    <nav class="pages" aria-label="Pages">
+      <a class="active" href="MAIN.html" aria-current="page">MAIN</a>
+      <a href="01.html">01</a>
+      <a href="02.html">02</a>
+      <a href="03.html">03</a>
+      <a href="04.html">04</a>
+      <a href="05.html">05</a>
+      <a href="06.html">06</a>
+      <a href="07.html">07</a>
+      <a href="08.html">08</a>
+      <a href="09.html">09</a>
+      <a href="10.html">10</a>
+      <a href="11.html">11</a>
+      <a href="12.html">12</a>
+    </nav>
+
+    <footer class="site-footer">
+      © 2026 <a href="https://www.instagram.com/taejun____e/" target="_blank" rel="noopener noreferrer">Taejune Youn</a>. All rights reserved.
+    </footer>
+  </main>
+
+  <script src="6TPK-data.js"></script>
+  <script src="molecule.js"></script>
+  <script>
+    (() => {
+      const cloud = document.querySelector(".cloud");
+      const tiles = document.querySelectorAll(".tile");
+      const finePointer = window.matchMedia("(hover: hover) and (pointer: fine)");
+      const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+      let targetX = 0;
+      let targetY = 0;
+      let currentX = 0;
+      let currentY = 0;
+
+      function renderParallax() {
+        currentX += (targetX - currentX) * 0.075;
+        currentY += (targetY - currentY) * 0.075;
+        cloud.style.setProperty("--scene-ry", `${currentX * 4.2}deg`);
+        cloud.style.setProperty("--scene-rx", `${currentY * -3.2}deg`);
+        requestAnimationFrame(renderParallax);
+      }
+
+      if (finePointer.matches && !reducedMotion.matches) {
+        window.addEventListener("pointermove", (event) => {
+          targetX = event.clientX / window.innerWidth - 0.5;
+          targetY = event.clientY / window.innerHeight - 0.5;
+        }, { passive: true });
+
+        document.documentElement.addEventListener("mouseleave", () => {
+          targetX = 0;
+          targetY = 0;
+        });
+
+        renderParallax();
+      }
+
+      tiles.forEach((tile) => {
+        const card = tile.querySelector(".card");
+        tile.addEventListener("pointermove", (event) => {
+          if (!finePointer.matches || reducedMotion.matches) return;
+          const rect = tile.getBoundingClientRect();
+          const x = event.clientX / rect.width - rect.left / rect.width - 0.5;
+          const y = event.clientY / rect.height - rect.top / rect.height - 0.5;
+          card.style.setProperty("--card-ry", `${x * 9}deg`);
+          card.style.setProperty("--card-rx", `${y * -9}deg`);
+        });
+        tile.addEventListener("pointerleave", () => {
+          card.style.setProperty("--card-ry", "0deg");
+          card.style.setProperty("--card-rx", "0deg");
+        });
+      });
+    })();
+  </script>
+</body>
+</html>
