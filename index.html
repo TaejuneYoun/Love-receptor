@@ -62,9 +62,7 @@
 
     .cloud {
       position: absolute;
-      /* Keep the visual cloud above the footer/navigation and optically
-         centred on both wide and short desktop viewports. */
-      inset: -7vh 0 7vh;
+      inset: 0;
       z-index: 2;
       pointer-events: none;
       transform: rotateX(var(--scene-rx, 0deg)) rotateY(var(--scene-ry, 0deg));
@@ -91,7 +89,7 @@
     .molecule-layer {
       position: absolute;
       left: 50%;
-      top: 42%;
+      top: 49%;
       z-index: 1;
       width: min(64vw, 980px);
       height: min(78vh, 820px);
@@ -334,6 +332,13 @@
       }
     }
 
+    /* Taller desktop/tablet windows need optical, rather than mathematical,
+       centring. Wide 16:9 displays retain the original safe composition. */
+    @media (min-width: 821px) and (max-aspect-ratio: 4 / 3) {
+      .cloud { inset: -5vh 0 5vh; }
+      .molecule-layer { top: 44%; }
+    }
+
     @media (max-width: 820px) {
       body { overflow: hidden; }
       .scene {
@@ -344,8 +349,8 @@
       }
       .cloud {
         position: absolute;
-        inset: -5vh 0 5vh;
-        inset: -5svh 0 5svh;
+        inset: -4vh 0 4vh;
+        inset: -4svh 0 4svh;
         display: block;
         min-height: 100svh;
         padding: 0;
