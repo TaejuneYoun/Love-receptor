@@ -240,6 +240,7 @@
       let lastAdvanceTime = 0;
       let activePointerId = null;
       let autoFinishing = false;
+      let latestGuide = null;
       const mobileInteraction = window.matchMedia("(max-width: 820px), (hover: none) and (pointer: coarse)").matches;
 
       const sourceWidth = 5020;
@@ -277,8 +278,7 @@
         const segments = [];
         const layout = artworkLayout(width, height);
         const strokeWidth = Math.max(28, 120 * layout.scale);
-        const safeInset = strokeWidth / 2 + 2;
-        const left = Math.max(layout.left + 72 * layout.scale, safeInset);
+        const left = layout.left + 72 * layout.scale;
         const rows = [
           { y: 113, end: 1062 },
           { y: 306, end: 1921 },
@@ -288,12 +288,20 @@
         rows.forEach((row, index) => {
           const y = layout.top + row.y * layout.scale;
           if (index === 0) points.push({ x: left, y });
-          points.push({ x: Math.min(layout.left + row.end * layout.scale, width - safeInset), y });
+          points.push({ x: layout.left + row.end * layout.scale, y });
           segments.push("line");
           if (index === rows.length - 1) return;
           points.push({ x: left, y: layout.top + rows[index + 1].y * layout.scale });
           segments.push("fold");
         });
+
+        if (mobileInteraction) {
+          const mobileGuideInset = strokeWidth / 2 + 2;
+          points.forEach((point) => {
+            point.x = Math.max(mobileGuideInset, Math.min(width - mobileGuideInset, point.x));
+            point.y = Math.max(mobileGuideInset, Math.min(height - mobileGuideInset, point.y));
+          });
+        }
 
         const cumulative = [0];
         for (let index = 1; index < points.length; index += 1) {
@@ -337,8 +345,15 @@
           marker.textContent = horizontal ? (dx >= 0 ? "→" : "←") : "↓";
           marker.classList.toggle("current", markerOrder === activeOrder);
           const offset = guide.lineWidth * .68 + 8;
-          marker.style.left = (start.x - dx / length * offset) + "px";
-          marker.style.top = (start.y - dy / length * offset) + "px";
+          const markerX = start.x - dx / length * offset;
+          const markerY = start.y - dy / length * offset;
+          const mobileMarkerInset = 10;
+          marker.style.left = (mobileInteraction
+            ? Math.max(mobileMarkerInset, Math.min(area.clientWidth - mobileMarkerInset, markerX))
+            : markerX) + "px";
+          marker.style.top = (mobileInteraction
+            ? Math.max(mobileMarkerInset, Math.min(area.clientHeight - mobileMarkerInset, markerY))
+            : markerY) + "px";
           directionLayer.appendChild(marker);
           markerOrder += 1;
         });
@@ -356,6 +371,7 @@
         context.scale(dpr, dpr);
         context.lineJoin = "round";
         const guide = makeGuide(rect.width, rect.height);
+        latestGuide = guide;
         const cursorHead = pointOnGuide(guide, progress);
         const cursorGuide = {
           x: rect.left + cursorHead.x,
@@ -423,9 +439,26 @@
         updateTranslation();
       }
 
+      function contentRevealProgress(guide, pathProgress) {
+        if (!guide) return pathProgress;
+        const distance = guide.total * pathProgress;
+        let contentTotal = 0;
+        let revealedContent = 0;
+        guide.segments.forEach((kind, index) => {
+          if (kind === "fold") return;
+          const start = guide.cumulative[index];
+          const end = guide.cumulative[index + 1];
+          const length = Math.max(0, end - start);
+          contentTotal += length;
+          revealedContent += Math.max(0, Math.min(length, distance - start));
+        });
+        return contentTotal > 0 ? Math.min(1, revealedContent / contentTotal) : pathProgress;
+      }
+
       function updateTranslation() {
         document.body.classList.toggle("highlight-complete", progress >= 0.999);
-        const revealed = progress * characterSpans.length;
+        const revealProgress = contentRevealProgress(latestGuide, progress);
+        const revealed = revealProgress * characterSpans.length;
         characterSpans.forEach((span, index) => {
           const characterProgress = Math.min(1, Math.max(0, revealed - index));
           span.style.filter = `blur(${(1 - characterProgress) * 12}px)`;
