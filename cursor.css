@@ -136,6 +136,32 @@ body.main-page .custom-cursor-label {
   body.custom-cursor-enabled * { cursor: auto !important; }
 }
 
+@media (min-width: 3000px) and (min-height: 1600px) and (pointer: fine) {
+  .custom-cursor-shape {
+    left: -26px;
+    top: -26px;
+    width: 52px;
+    height: clamp(440px, 42vh, 1120px);
+    transform-origin: 26px 26px;
+  }
+
+  body:not(.main-page) .custom-cursor-shape {
+    height: clamp(132px, 12.6vh, 336px);
+  }
+
+  body.highlight-complete .custom-cursor-shape {
+    left: -34px;
+    top: -34px;
+    width: 68px;
+    height: 68px;
+  }
+
+  .custom-cursor-label {
+    min-width: 40px;
+    font-size: 16px;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .custom-cursor-shape { transition: none; }
   html.from-main-transition .site-shell { opacity: 1; }
