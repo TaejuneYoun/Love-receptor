@@ -87,6 +87,10 @@ html.from-main-transition .custom-cursor {
   will-change: left, top, width, height, transform;
 }
 
+body:not(.main-page) .custom-cursor-shape {
+  height: clamp(165px, 31.5vh, 420px);
+}
+
 body.highlight-complete .custom-cursor-shape {
   left: -17px;
   top: -17px;

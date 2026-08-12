@@ -518,7 +518,7 @@
         activePointerId = null;
         const startProgress = progress;
         const startedAt = performance.now();
-        const duration = mobileInteraction ? 980 : 620;
+        const duration = 980;
 
         function animate(now) {
           const elapsed = Math.min(1, (now - startedAt) / duration);
@@ -566,7 +566,7 @@
           pointer,
           guide,
           Math.max(0, gestureProgress - 0.02),
-          Math.min(1, gestureProgress + (mobileInteraction ? 0.095 : 0.22))
+          Math.min(1, gestureProgress + 0.095)
         );
         if (!projection || projection.distance > tolerance) return;
         const requestedAdvance = projection.candidate - gestureProgress;
@@ -577,23 +577,29 @@
         const elapsed = Math.min(0.05, Math.max(1 / 120, (now - lastAdvanceTime) / 1000));
         lastAdvanceTime = now;
         const state = segmentState(guide, gestureProgress);
-        const foldStart = guide.points[state.index];
-        const foldEnd = guide.points[state.index + 1];
-        const previousStart = guide.points[Math.max(0, state.index - 1)];
-        const previousDx = foldStart.x - previousStart.x;
-        const previousDy = foldStart.y - previousStart.y;
-        const interlineGap = Math.abs(previousDx) >= Math.abs(previousDy)
-          ? Math.abs(foldEnd.y - foldStart.y)
-          : Math.abs(foldEnd.x - foldStart.x);
-        const shortFold = state.kind === "fold" && interlineGap <= guide.lineWidth * 1.75;
-        let maximumRate = state.kind === "fold" ? (shortFold ? 1.15 * 0.5 : 1.15) : 0.34;
-        if (mobileInteraction) maximumRate *= 0.48;
-        if (state.kind !== "fold" && state.local >= 0.9) {
-          const t = Math.min(1, (state.local - 0.9) / 0.1);
-          const easedSlowdown = t * t * (3 - 2 * t);
-          maximumRate *= 1 - easedSlowdown * 0.62;
-        }
-        const maximumAdvance = Math.max(0.0015, maximumRate * elapsed);
+        const foldGap = (index) => {
+          const start = guide.points[index];
+          const end = guide.points[index + 1];
+          const previous = guide.points[Math.max(0, index - 1)];
+          const previousDx = start.x - previous.x;
+          const previousDy = start.y - previous.y;
+          return Math.abs(previousDx) >= Math.abs(previousDy)
+            ? Math.abs(end.y - start.y)
+            : Math.abs(end.x - start.x);
+        };
+        const foldGaps = guide.segments
+          .map((kind, index) => kind === "fold" ? foldGap(index) : 0)
+          .filter((gap) => gap > 0);
+        const interlineGap = state.kind === "fold" ? foldGap(state.index) : 0;
+        const largestInterlineGap = foldGaps.length ? Math.max(...foldGaps) : 0;
+        const shortFold = state.kind === "fold"
+          && largestInterlineGap > 0
+          && interlineGap < largestInterlineGap * 0.98;
+        const baseHighlightRate = 0.11;
+        let maximumRate = baseHighlightRate;
+        if (state.kind === "fold") maximumRate *= 0.7;
+        if (shortFold) maximumRate *= 0.7;
+        const maximumAdvance = Math.max(0.00035, maximumRate * elapsed);
 
         gestureActivated = true;
         gestureProgress = Math.min(projection.candidate, gestureProgress + maximumAdvance);
