@@ -66,10 +66,8 @@
     tile.style.visibility = "hidden";
 
     rememberCursorHandoff();
-    window.setTimeout(
-      () => window.location.assign(destination),
-      reducedMotion.matches ? 220 : 1620
-    );
+    const navigationDelay = reducedMotion.matches ? 220 : (isTouch ? 820 : 1620);
+    window.setTimeout(() => window.location.assign(destination), navigationDelay);
   }
 
   tiles.forEach((tile) => {

@@ -23,9 +23,20 @@
   if (!validHandoff && !fromMainUrl) return;
 
   const root = document.documentElement;
+  const touchViewport = window.matchMedia(
+    "(max-width: 820px), (hover: none) and (pointer: coarse)"
+  ).matches;
   root.classList.add("from-main-transition");
 
   document.addEventListener("DOMContentLoaded", () => {
+    // Reveal only after the page's inline drag handlers are attached. Avoiding
+    // the fixed transition layer keeps slower mobile webviews touch-ready as
+    // soon as the inscription becomes visible.
+    if (touchViewport) {
+      root.classList.remove("from-main-transition", "entry-revealing");
+      return;
+    }
+
     const overlay = document.createElement("div");
     overlay.className = "entry-transition";
     overlay.setAttribute("aria-hidden", "true");
