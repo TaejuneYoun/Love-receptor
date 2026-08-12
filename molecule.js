@@ -1,16 +1,16 @@
-(() => {
+(async () => {
   const canvas = document.querySelector(".molecule-canvas");
   const layer = document.querySelector(".molecule-layer");
   const tooltip = document.querySelector(".model-tooltip");
   const encoded = window.__MODEL_6TPK_BASE64;
-  if (!canvas || !layer || !tooltip || !encoded) return;
+  if (!canvas || !layer || !tooltip) return;
 
   const gl = canvas.getContext("webgl2", {
     alpha: true,
     antialias: true,
     depth: true,
     premultipliedAlpha: false,
-    preserveDrawingBuffer: true
+    preserveDrawingBuffer: false
   });
 
   if (!gl) {
@@ -84,6 +84,13 @@
       }
     }
     return bytes.buffer;
+  }
+
+  async function loadModelBuffer() {
+    if (encoded) return decodeBase64(encoded);
+    const response = await fetch("6TPK.glb", { cache: "force-cache" });
+    if (!response.ok) throw new Error(`Unable to load 6TPK model: ${response.status}`);
+    return response.arrayBuffer();
   }
 
   function parseGLB(buffer) {
@@ -290,12 +297,15 @@
 
   try {
     const program = makeProgram();
-    const model = setupModel(parseGLB(decodeBase64(encoded)), program);
+    const model = setupModel(parseGLB(await loadModelBuffer()), program);
     const modelUniform = gl.getUniformLocation(program, "uModel");
     const mvpUniform = gl.getUniformLocation(program, "uMVP");
     const hoverUniform = gl.getUniformLocation(program, "uHover");
     const pixel = new Uint8Array(4);
     let hovered = false;
+    let renderFrame = 0;
+    let hitTestFrame = 0;
+    let latestPointer = null;
 
     gl.useProgram(program);
     gl.enable(gl.DEPTH_TEST);
@@ -316,6 +326,8 @@
     }
 
     function render(time) {
+      renderFrame = 0;
+      if (document.hidden) return;
       resize();
       gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
       gl.useProgram(program);
@@ -346,7 +358,11 @@
       });
 
       gl.bindVertexArray(null);
-      requestAnimationFrame(render);
+      renderFrame = requestAnimationFrame(render);
+    }
+
+    function startRendering() {
+      if (!renderFrame && !document.hidden) renderFrame = requestAnimationFrame(render);
     }
 
     function setHovered(value, event) {
@@ -358,7 +374,10 @@
       if (hovered && event) positionTooltip(event);
     }
 
-    canvas.addEventListener("pointermove", (event) => {
+    function hitTest() {
+      hitTestFrame = 0;
+      const event = latestPointer;
+      if (!event) return;
       const rect = canvas.getBoundingClientRect();
       const x = Math.max(0, Math.min(canvas.width - 1,
         Math.floor((event.clientX - rect.left) * canvas.width / rect.width)));
@@ -366,10 +385,26 @@
         canvas.height - 1 - Math.floor((event.clientY - rect.top) * canvas.height / rect.height)));
       gl.readPixels(x, y, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, pixel);
       setHovered(pixel[3] > 8, event);
+    }
+
+    canvas.addEventListener("pointermove", (event) => {
+      latestPointer = { clientX: event.clientX, clientY: event.clientY };
+      if (!hitTestFrame) hitTestFrame = requestAnimationFrame(hitTest);
     });
-    canvas.addEventListener("pointerleave", () => setHovered(false));
+    canvas.addEventListener("pointerleave", () => {
+      latestPointer = null;
+      setHovered(false);
+    });
     window.addEventListener("blur", () => setHovered(false));
-    requestAnimationFrame(render);
+    document.addEventListener("visibilitychange", () => {
+      if (document.hidden) {
+        if (renderFrame) cancelAnimationFrame(renderFrame);
+        renderFrame = 0;
+      } else {
+        startRendering();
+      }
+    }, { passive: true });
+    startRendering();
   } catch (error) {
     console.error("Unable to render 6TPK model", error);
     layer.hidden = true;
