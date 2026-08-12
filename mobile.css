@@ -129,6 +129,41 @@
     user-select: none;
   }
 
+  /* Keep every reading-direction arrow visible, including when its start point
+     overlaps the white highlight cap. */
+  .direction {
+    display: flex !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    z-index: 12 !important;
+  }
+
+  .direction-markers {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    z-index: 12 !important;
+    overflow: visible !important;
+  }
+
+  .direction span,
+  .direction-markers span {
+    display: block !important;
+    visibility: visible !important;
+    color: #ffffff !important;
+    opacity: .36 !important;
+    font-size: 10px !important;
+    mix-blend-mode: difference;
+  }
+
+  .inscription .direction span.current,
+  .inscription .direction-markers span.current,
+  .inscription:is(:hover, .dragging) .direction span.current,
+  .inscription:is(:hover, .dragging) .direction-markers span.current {
+    color: #ffffff !important;
+    opacity: 1 !important;
+  }
+
   .translation {
     flex: 1 1 auto;
     width: 100%;
