@@ -188,9 +188,8 @@
     }
 
     .pages a + a::before {
-      content: "/";
-      margin-right: 14px;
-      opacity: .55;
+      content: none;
+      margin-right: 0;
     }
 
     .pages a.active,
@@ -394,6 +393,43 @@
     @keyframes mobile-float {
       from { transform: translate3d(calc(-50% - 7px), calc(-50% - 8px), 0) rotate(-.5deg) scale(.98); }
       to { transform: translate3d(calc(-50% + 7px), calc(-50% + 8px), 0) rotate(.5deg) scale(1.02); }
+    }
+
+    @media (min-width: 3000px) and (min-height: 1600px) {
+      .scene { perspective: 2900px; }
+      .molecule-layer {
+        width: min(64vw, 1960px);
+        height: min(78vh, 1640px);
+      }
+      .tile:nth-child(1) { width: min(36vw, 700px); }
+      .tile:nth-child(2) { width: min(31vw, 600px); }
+      .tile:nth-child(3) { width: min(36vw, 690px); }
+      .tile:nth-child(4) { width: min(34vw, 650px); }
+      .tile:nth-child(5) { width: min(33vw, 630px); }
+      .tile:nth-child(6) { width: min(34vw, 650px); }
+      .tile:nth-child(7) { width: min(21.6vw, 416px); }
+      .tile:nth-child(8) { width: min(35vw, 670px); }
+      .tile:nth-child(9) { width: min(21.6vw, 416px); }
+      .tile:nth-child(10) { width: min(35vw, 670px); }
+      .tile:nth-child(11) { width: min(19vw, 364px); }
+      .tile:nth-child(12) { width: min(58vw, 1110px); }
+      .tile img { box-shadow: 0 8px 260px #ffffff; }
+      .pages {
+        bottom: 44px;
+        gap: 28px;
+        font-size: 36px;
+      }
+      .site-footer {
+        left: 40px;
+        bottom: 36px;
+        font-size: 36px;
+      }
+      .model-tooltip {
+        max-width: 620px;
+        padding: 14px 18px 16px;
+        font-size: 20px;
+        transform: translate(28px, 28px);
+      }
     }
 
     @media (prefers-reduced-motion: reduce) {
