@@ -603,9 +603,9 @@
         const shortFold = state.kind === "fold"
           && largestInterlineGap > 0
           && interlineGap < largestInterlineGap * 0.98;
-        const baseHighlightRate = 0.11;
+        const baseHighlightRate = 0.165;
         let maximumRate = baseHighlightRate;
-        if (state.kind === "fold") maximumRate *= 0.7;
+        if (state.kind === "fold") maximumRate *= 0.84;
         if (shortFold) maximumRate *= 0.7;
         const maximumAdvance = Math.max(0.00035, maximumRate * elapsed);
 
