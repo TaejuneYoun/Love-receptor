@@ -88,7 +88,7 @@ html.from-main-transition .custom-cursor {
 }
 
 body:not(.main-page) .custom-cursor-shape {
-  height: clamp(33px, 6.3vh, 84px);
+  height: clamp(66px, 12.6vh, 168px);
 }
 
 body.highlight-complete .custom-cursor-shape {
