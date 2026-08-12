@@ -277,7 +277,8 @@
         const segments = [];
         const layout = artworkLayout(width, height);
         const strokeWidth = Math.max(28, 120 * layout.scale);
-        const left = layout.left + 72 * layout.scale;
+        const safeInset = strokeWidth / 2 + 2;
+        const left = Math.max(layout.left + 72 * layout.scale, safeInset);
         const rows = [
           { y: 113, end: 1062 },
           { y: 306, end: 1921 },
@@ -287,7 +288,7 @@
         rows.forEach((row, index) => {
           const y = layout.top + row.y * layout.scale;
           if (index === 0) points.push({ x: left, y });
-          points.push({ x: layout.left + row.end * layout.scale, y });
+          points.push({ x: Math.min(layout.left + row.end * layout.scale, width - safeInset), y });
           segments.push("line");
           if (index === rows.length - 1) return;
           points.push({ x: left, y: layout.top + rows[index + 1].y * layout.scale });
