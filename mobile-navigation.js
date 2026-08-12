@@ -1,6 +1,5 @@
 (() => {
   const mobileViewport = window.matchMedia("(max-width: 820px)");
-  if (!mobileViewport.matches) return;
 
   const pageMatch = window.location.pathname.match(/(?:^|\/)(\d{2}|Barbarian-Love)\.html$/i);
   if (!pageMatch) return;
@@ -8,7 +7,8 @@
   const current = pageMatch[1].toLowerCase() === "barbarian-love"
     ? "01"
     : pageMatch[1];
-  const pages = Array.from({ length: 11 }, (_, index) => String(index + 1).padStart(2, "0"));
+  const pageCount = mobileViewport.matches ? 11 : 12;
+  const pages = Array.from({ length: pageCount }, (_, index) => String(index + 1).padStart(2, "0"));
   const currentIndex = pages.indexOf(current);
   if (currentIndex < 0) return;
 
@@ -16,10 +16,11 @@
   navigation.className = "mobile-detail-navigation";
   navigation.setAttribute("aria-label", "Detail page navigation");
 
-  const link = (className, href, label, iconName) => {
+  const link = (className, href, label, iconName, cursorLabel) => {
     const anchor = document.createElement("a");
     anchor.className = className;
     anchor.href = href;
+    anchor.dataset.cursorLabel = cursorLabel;
     anchor.setAttribute("aria-label", label);
     const icon = document.createElement("span");
     icon.className = `mobile-nav-icon mobile-nav-icon-${iconName}`;
@@ -35,9 +36,9 @@
   const previous = pages[(currentIndex - 1 + pages.length) % pages.length];
   const next = pages[(currentIndex + 1) % pages.length];
   navigation.append(
-    link("mobile-page-step mobile-page-previous", `${previous}.html`, `Previous page, ${previous}`, "previous"),
-    link("mobile-page-main", "MAIN.html", "Return to main page", "close"),
-    link("mobile-page-step mobile-page-next", `${next}.html`, `Next page, ${next}`, "next")
+    link("mobile-page-step mobile-page-previous", `${previous}.html`, `Previous page, ${previous}`, "previous", "←"),
+    link("mobile-page-main", "MAIN.html", "Return to main page", "close", "×"),
+    link("mobile-page-step mobile-page-next", `${next}.html`, `Next page, ${next}`, "next", "→")
   );
   document.body.appendChild(navigation);
 

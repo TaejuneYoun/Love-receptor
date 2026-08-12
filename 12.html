@@ -638,6 +638,7 @@
         if (mobileInteraction) maximumRate *= state.kind === "fold" ? 4 : 3;
         if (tabletHighlightBoost && state.kind !== "fold") maximumRate *= 1.5;
         if (highResolutionHighlightBoost) maximumRate *= 2;
+        if (!mobileInteraction) maximumRate *= 1.5;
         const maximumAdvance = Math.max(0.00035, maximumRate * elapsed);
 
         gestureActivated = true;

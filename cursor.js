@@ -20,10 +20,10 @@
 
   function menuItem(target) {
     const item = target instanceof Element
-      ? target.closest(".pages a, .language button")
+      ? target.closest(".pages a, .language button, .mobile-detail-navigation a")
       : null;
     if (!item) return null;
-    return { item, text: item.textContent.trim() };
+    return { item, text: item.dataset.cursorLabel || item.textContent.trim() };
   }
 
   function matchMenuTypography(item) {
