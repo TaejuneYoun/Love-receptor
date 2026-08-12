@@ -14,6 +14,12 @@
     overflow: hidden;
   }
 
+  /* The Greek inscription uses the full mobile width so its alternating
+     reading arrows stay clear of the long letterforms. */
+  body.page-01 .site-shell {
+    padding-inline: 0 !important;
+  }
+
   header {
     position: static;
     min-height: 0 !important;
@@ -231,6 +237,7 @@
     padding: 2svh 0 calc(3svh + 10px);
     align-items: center !important;
     justify-content: center !important;
+    transform: translateY(-20px);
   }
 
   .translated-copy {
@@ -295,6 +302,7 @@
   .translation {
     flex: 0 0 34%;
     height: 86svh;
+    transform: translateY(-20px);
   }
 
   .translated-copy {
