@@ -18,10 +18,11 @@
   }
 
   function beginTransition(event, selectedTile = event.currentTarget) {
+    const isTouch = event.type === "touchend" || event.pointerType === "touch";
     if (
       transitioning ||
       event.defaultPrevented ||
-      event.button !== 0 ||
+      (!isTouch && event.button !== 0) ||
       event.metaKey ||
       event.ctrlKey ||
       event.shiftKey ||
@@ -71,7 +72,10 @@
     );
   }
 
-  tiles.forEach((tile) => tile.addEventListener("click", beginTransition));
+  tiles.forEach((tile) => {
+    tile.addEventListener("click", beginTransition);
+    tile.addEventListener("touchend", beginTransition, { passive: false });
+  });
   pageLinks.forEach((link) => {
     link.addEventListener("click", (event) => {
       const requested = new URL(link.href, window.location.href).pathname;

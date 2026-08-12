@@ -26,7 +26,6 @@
   <script src="entry-transition.js"></script>
   <link rel="stylesheet" href="cursor.css">
   <script src="cursor.js" defer></script>
-  <script src="gyro.js" defer></script>
   <title>Love receptor — 07</title>
   <style>
     :root { --ink: #000000; --paper: #f1f0eb; }
@@ -239,6 +238,7 @@
       let lastAdvanceTime = 0;
       let activePointerId = null;
       let autoFinishing = false;
+      const mobileInteraction = window.matchMedia("(max-width: 820px), (hover: none) and (pointer: coarse)").matches;
 
       const sourceWidth = 3330;
       const sourceHeight = 1898;
@@ -519,7 +519,7 @@
         activePointerId = null;
         const startProgress = progress;
         const startedAt = performance.now();
-        const duration = 620;
+        const duration = mobileInteraction ? 980 : 620;
 
         function animate(now) {
           const elapsed = Math.min(1, (now - startedAt) / duration);
@@ -546,7 +546,7 @@
         const rect = area.getBoundingClientRect();
         const pointer = pointerPosition(event);
         const guide = makeGuide(rect.width, rect.height);
-        const tolerance = guide.lineWidth * 0.9;
+        const tolerance = guide.lineWidth * (mobileInteraction ? 1.4 : 0.9);
         const tangent = pointOnGuide(guide, gestureProgress);
 
         if (lastPointer) {
@@ -567,7 +567,7 @@
           pointer,
           guide,
           Math.max(0, gestureProgress - 0.02),
-          Math.min(1, gestureProgress + 0.22)
+          Math.min(1, gestureProgress + (mobileInteraction ? 0.095 : 0.22))
         );
         if (!projection || projection.distance > tolerance) return;
         const requestedAdvance = projection.candidate - gestureProgress;
@@ -588,6 +588,7 @@
           : Math.abs(foldEnd.x - foldStart.x);
         const shortFold = state.kind === "fold" && interlineGap <= guide.lineWidth * 1.75;
         let maximumRate = state.kind === "fold" ? (shortFold ? 1.15 * 0.5 : 1.15) : 0.34;
+        if (mobileInteraction) maximumRate *= 0.48;
         if (state.kind !== "fold" && state.local >= 0.9) {
           const t = Math.min(1, (state.local - 0.9) / 0.1);
           const easedSlowdown = t * t * (3 - 2 * t);
@@ -609,17 +610,19 @@
         if (finalLocal >= 0.8) finishAutomatically();
       }
 
-      area.addEventListener("pointerdown", (event) => {
+      function beginDragFromPoint(event, pointerId = null) {
         if (autoFinishing || progress >= 1) return;
         const rect = area.getBoundingClientRect();
         const guide = makeGuide(rect.width, rect.height);
         const pointer = pointerPosition(event);
         const head = pointOnGuide(guide, progress);
-        const startTolerance = guide.lineWidth;
+        const startTolerance = guide.lineWidth * (mobileInteraction ? 1.65 : 1);
         if (Math.hypot(pointer.x - head.x, pointer.y - head.y) > startTolerance) return;
 
-        area.setPointerCapture(event.pointerId);
-        activePointerId = event.pointerId;
+        if (pointerId !== null && typeof area.setPointerCapture === "function") {
+          try { area.setPointerCapture(pointerId); } catch {}
+        }
+        activePointerId = pointerId;
         dragging = true;
         gestureProgress = progress;
         gestureActivated = false;
@@ -628,20 +631,55 @@
         lastAdvanceTime = performance.now();
         area.classList.add("dragging");
         draw();
-      });
-      area.addEventListener("pointermove", (event) => {
-        if (dragging) followGuide(event);
-      });
-      ["pointerup", "pointercancel"].forEach((type) => {
-        area.addEventListener(type, () => {
-          dragging = false;
-          activePointerId = null;
-          lastPointer = null;
-          area.classList.remove("dragging");
-          draw();
-          updateTranslation();
+      }
+
+      function endDrag() {
+        dragging = false;
+        activePointerId = null;
+        lastPointer = null;
+        area.classList.remove("dragging");
+        draw();
+        updateTranslation();
+      }
+
+      const useTouchEvents = mobileInteraction && "ontouchstart" in window;
+      if (useTouchEvents) {
+        area.addEventListener("touchstart", (event) => {
+          const touch = event.changedTouches[0];
+          if (!touch) return;
+          beginDragFromPoint(touch, touch.identifier);
+          if (dragging && event.cancelable) event.preventDefault();
+        }, { passive: false });
+        area.addEventListener("touchmove", (event) => {
+          if (!dragging) return;
+          const touch = Array.from(event.touches).find((item) => item.identifier === activePointerId)
+            || event.touches[0];
+          if (!touch) return;
+          if (event.cancelable) event.preventDefault();
+          followGuide(touch);
+        }, { passive: false });
+        ["touchend", "touchcancel"].forEach((type) => {
+          area.addEventListener(type, (event) => {
+            if (!dragging) return;
+            const ended = Array.from(event.changedTouches).some(
+              (touch) => touch.identifier === activePointerId
+            );
+            if (!ended && event.touches.length) return;
+            if (event.cancelable) event.preventDefault();
+            endDrag();
+          }, { passive: false });
         });
-      });
+      } else {
+        area.addEventListener("pointerdown", (event) => {
+          beginDragFromPoint(event, event.pointerId);
+        });
+        area.addEventListener("pointermove", (event) => {
+          if (dragging) followGuide(event);
+        });
+        ["pointerup", "pointercancel"].forEach((type) => {
+          area.addEventListener(type, endDrag);
+        });
+      }
 
       function updateLanguageInterface() {
         document.documentElement.lang = language === "KOR" ? "ko" : "en";

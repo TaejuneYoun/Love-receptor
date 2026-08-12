@@ -25,7 +25,6 @@
   <meta name="twitter:image" content="https://taejuneyoun.github.io/Love-receptor/og-preview.png">
   <link rel="stylesheet" href="cursor.css">
   <script src="cursor.js" defer></script>
-  <script src="gyro.js" defer></script>
   <script src="main-transition.js" defer></script>
   <title>Love receptor</title>
   <style>
@@ -346,46 +345,40 @@
         display: block;
         min-height: 100svh;
         padding: 0;
-        transform: perspective(1200px)
-          rotateX(var(--gyro-rx, 0deg))
-          rotateY(var(--gyro-ry, 0deg)) !important;
+        transform: none !important;
         transform-origin: 50% 50%;
-        transition: transform 110ms linear;
-        will-change: transform;
+        transition: none;
+        will-change: auto;
       }
       .molecule-layer {
-        position: fixed;
-        top: 50%;
-        width: 112vw;
-        height: 72svh;
-        opacity: .44;
-        transform: translate(-50%, -50%) perspective(1200px)
-          rotateX(var(--gyro-rx, 0deg))
-          rotateY(var(--gyro-ry, 0deg));
-        transition: transform 110ms linear;
+        display: none;
       }
+      .model-tooltip { display: none; }
       .tile {
         position: absolute;
-        animation-name: mobile-drift;
-        animation-duration: var(--duration);
+        touch-action: manipulation;
+        -webkit-tap-highlight-color: transparent;
+        animation-name: mobile-float;
+        animation-duration: calc(var(--duration) * 1.25);
+        animation-timing-function: ease-in-out;
       }
-      .tile:nth-child(1) { left: 66%; top: 28%; width: 72vw; z-index: 8; }
-      .tile:nth-child(2) { left: 51%; top: 43%; width: 60vw; z-index: 12; }
-      .tile:nth-child(3) { left: 88%; top: 40%; width: 72vw; z-index: 7; }
-      .tile:nth-child(4) { left: -9%; top: 63%; width: 62vw; z-index: 5; }
-      .tile:nth-child(5) { left: 56%; top: 53%; width: 67vw; z-index: 14; }
-      .tile:nth-child(6) { left: 22%; top: 59%; width: 68vw; z-index: 8; }
-      .tile:nth-child(7) { left: 27%; top: 33%; width: 42vw; z-index: 6; }
-      .tile:nth-child(8) { left: 60%; top: 64%; width: 67vw; z-index: 10; }
-      .tile:nth-child(9) { left: 28%; top: 74%; width: 45vw; z-index: 7; }
-      .tile:nth-child(10) { left: 79%; top: 72%; width: 72vw; z-index: 6; }
-      .tile:nth-child(11) { left: 3%; top: 43%; width: 46vw; z-index: 4; }
-      .tile:nth-child(12) { left: 55%; top: 81%; width: 94vw; z-index: 3; }
+      .tile:nth-child(1) { left: 67%; top: 16%; width: 44vw; z-index: 8; }
+      .tile:nth-child(2) { left: 51%; top: 33%; width: 36vw; z-index: 12; }
+      .tile:nth-child(3) { left: 84%; top: 31%; width: 44vw; z-index: 7; }
+      .tile:nth-child(4) { left: 12%; top: 56%; width: 39vw; z-index: 5; }
+      .tile:nth-child(5) { left: 56%; top: 46%; width: 39vw; z-index: 14; }
+      .tile:nth-child(6) { left: 30%; top: 49%; width: 41vw; z-index: 8; }
+      .tile:nth-child(7) { left: 28%; top: 23%; width: 26vw; z-index: 6; }
+      .tile:nth-child(8) { left: 66%; top: 58%; width: 42vw; z-index: 10; }
+      .tile:nth-child(9) { left: 30%; top: 70%; width: 27vw; z-index: 7; }
+      .tile:nth-child(10) { left: 76%; top: 69%; width: 43vw; z-index: 6; }
+      .tile:nth-child(11) { left: 9%; top: 34%; width: 27vw; z-index: 4; }
+      .tile:nth-child(12) { left: 49%; top: 76%; width: 55vw; z-index: 3; }
       .tile:hover .card,
       .tile:focus-visible .card {
         transform: scale(1.035);
       }
-      .tile img { box-shadow: 0 4px 130px #ffffff; }
+      .tile img { box-shadow: 0 4px 70px rgba(255, 255, 255, .86); }
       .pages { display: none; }
       .site-footer {
         left: 50%;
@@ -397,9 +390,9 @@
       }
     }
 
-    @keyframes mobile-drift {
-      from { transform: translate(-50%, calc(-50% - 5px)) rotate(-.7deg); }
-      to { transform: translate(calc(-50% + 5px), calc(-50% + 5px)) rotate(.7deg); }
+    @keyframes mobile-float {
+      from { transform: translate3d(-50%, calc(-50% - 3px), 0) rotate(-.35deg) scale(.985); }
+      to { transform: translate3d(calc(-50% + 3px), calc(-50% + 3px), 0) rotate(.35deg) scale(1.015); }
     }
 
     @media (prefers-reduced-motion: reduce) {
@@ -509,8 +502,18 @@
     </footer>
   </main>
 
-  <script src="6TPK-data.js"></script>
-  <script src="molecule.js"></script>
+  <script>
+    if (window.matchMedia("(min-width: 821px) and (hover: hover) and (pointer: fine)").matches) {
+      const modelData = document.createElement("script");
+      modelData.src = "6TPK-data.js";
+      modelData.onload = () => {
+        const modelRenderer = document.createElement("script");
+        modelRenderer.src = "molecule.js";
+        document.body.appendChild(modelRenderer);
+      };
+      document.body.appendChild(modelData);
+    }
+  </script>
   <script>
     (() => {
       const cloud = document.querySelector(".cloud");
