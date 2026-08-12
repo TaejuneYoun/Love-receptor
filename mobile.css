@@ -365,7 +365,7 @@
 
   .pages {
     bottom: 44px !important;
-    gap: 28px !important;
-    font-size: 36px !important;
+    gap: 14px !important;
+    font-size: 18px !important;
   }
 }
