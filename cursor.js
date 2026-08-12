@@ -18,16 +18,28 @@
   let pointer = { x: -100, y: -100, visible: false, target: null };
   let guide = window.__barbarianCursorGuide || null;
 
-  function menuLabel(target) {
+  function menuItem(target) {
     const item = target instanceof Element
       ? target.closest(".pages a, .language button")
       : null;
-    return item ? item.textContent.trim() : "";
+    if (!item) return null;
+    return { item, text: item.textContent.trim() };
+  }
+
+  function matchMenuTypography(item) {
+    if (!item) return;
+    const styles = getComputedStyle(item);
+    label.style.fontFamily = styles.fontFamily;
+    cursor.style.setProperty("--cursor-label-size", styles.fontSize);
+    cursor.style.setProperty("--cursor-label-weight", styles.fontWeight);
+    cursor.style.setProperty("--cursor-label-line-height", styles.lineHeight);
+    cursor.style.setProperty("--cursor-label-letter-spacing", styles.letterSpacing);
   }
 
   function render() {
     if (!pointer.visible) return;
-    const text = menuLabel(pointer.target);
+    const menu = menuItem(pointer.target);
+    const text = menu?.text || "";
     const canSnap = guide && !text && !guide.complete;
     const distance = canSnap
       ? Math.hypot(pointer.x - guide.x, pointer.y - guide.y)
@@ -40,6 +52,7 @@
     cursor.classList.toggle("snapped", snapToStart);
     cursor.classList.remove("locked");
     cursor.classList.toggle("has-label", Boolean(text));
+    matchMenuTypography(menu?.item);
     label.textContent = text;
     cursor.style.transform = `translate3d(${x}px, ${y}px, 0)`;
   }
