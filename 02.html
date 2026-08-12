@@ -594,7 +594,7 @@
         let maximumRate = baseHighlightRate;
         if (state.kind === "fold") maximumRate *= 0.84;
         if (shortFold) maximumRate *= 0.7;
-        if (mobileInteraction) maximumRate *= 2;
+        if (mobileInteraction) maximumRate *= state.kind === "fold" ? 4 : 3;
         const maximumAdvance = Math.max(0.00035, maximumRate * elapsed);
 
         gestureActivated = true;
